@@ -1421,6 +1421,7 @@ TC_METHOD(storeDocs)
 	}
 	
 	smart_str_free(&surl);
+	FREE_ARGS_HASH(rheaders);
 	
 #if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 3) || (PHP_MAJOR_VERSION > 5)	
 	PROCESS_JSON_RESULT_COMPART_EX(http_response_code, local_client, assoc);
