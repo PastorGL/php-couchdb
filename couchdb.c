@@ -1059,7 +1059,7 @@ TC_METHOD(getDoc)
 	zval *options = NULL, *zret;
 	long http_response_code;
 	zend_bool assoc = 0;
-	zend_bool raw = false;
+	zend_bool raw = 0;
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|ab", &doc_id, &doc_id_len, &options, &raw) == FAILURE) {
 		return;
@@ -1322,7 +1322,8 @@ TC_METHOD(storeDocs)
 	int db_name_len = 0, tmp_document_len = 0, final_json_string_len = 0;
 	long http_response_code;
 	zend_bool all_or_nothing = 0, document_is_string = 0, assoc = 1;
-	
+    HashTable *rheaders = NULL;
+    	
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|b", &documents, &all_or_nothing) == FAILURE) {
 		return;
@@ -1391,6 +1392,12 @@ TC_METHOD(storeDocs)
 	
 	efree(edb_name);
 
+    //add json header
+        ALLOC_HASHTABLE(rheaders);
+        zend_hash_init(rheaders, 0, NULL, ZVAL_PTR_DTOR, 0);
+
+        couchdb_add_req_arg(rheaders, "Content-Type", "application/json" TSRMLS_CC);
+
 	if (!document_is_string) {
 		
 		if (all_or_nothing) {
@@ -1405,12 +1412,12 @@ TC_METHOD(storeDocs)
 		
 		smart_str_free(&json_string);
 		
-		http_response_code = couchdb_prepare_request(local_client, surl.c, COUCHDB_POST, zjson_string, NULL, 0 TSRMLS_CC);
+		http_response_code = couchdb_prepare_request(local_client, surl.c, COUCHDB_POST, zjson_string, rheaders, 0 TSRMLS_CC);
 		
 		zval_ptr_dtor(&zjson_string);
 		efree(final_json_string);
 	}else {
-		http_response_code = couchdb_prepare_request(local_client, surl.c, COUCHDB_POST, documents, NULL, 0 TSRMLS_CC);
+		http_response_code = couchdb_prepare_request(local_client, surl.c, COUCHDB_POST, documents, rheaders, 0 TSRMLS_CC);
 	}
 	
 	smart_str_free(&surl);
